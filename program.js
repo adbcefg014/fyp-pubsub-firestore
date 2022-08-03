@@ -75,8 +75,8 @@ async function storeEvent(message, inObj) {
     for (let dataArraySet = 0; dataArraySet < dataArrayGroupSet.length; dataArraySet++) {
         // Add each array element of the sensor data set into obj, corresponding to its representation
         let dataObj = {};
+        let reading;
         for (let dataReading = 0; dataReading < dataArrayGroupSet[dataArraySet].length; dataReading++) {
-            let reading;
             switch (dataReading) {
                 case 0:
                     reading = 'Timestamp';
@@ -115,14 +115,13 @@ async function storeEvent(message, inObj) {
                         reading = 'CO2 (ppm)';
                         break;
             }
-            
             dataObj[reading] = dataArrayGroupSet[dataArraySet][dataReading];
-
-            // Add processed set of sensor readings to Database
-            const storedData = await db.collection(message.attributes.device_id).add(dataObj);
-            console.log("Sensor reading set stored in Firestore\r\n");
-            console.log(dataObj);
         }
+
+        // Add processed set of sensor readings to Database
+        const storedData = await db.collection(message.attributes.device_id).add(dataObj);
+        console.log("Sensor reading set stored in Firestore\r\n");
+        console.log(dataObj);
     }
 };
 /* END FIRESTORE */
