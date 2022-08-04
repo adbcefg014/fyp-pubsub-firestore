@@ -1,12 +1,14 @@
 const {PubSub} = require('@google-cloud/pubsub');
 const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
 const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
+const Particle = require('particle-api-js');
 
 /* CONFIGURATION */
 let config = {
     gcpProjectId: 'c177-sensors',
     gcpPubSubSubscriptionName: 'projects/c177-sensors/subscriptions/ingest',
-    gcpServiceAccountKeyFilePath: './gcp_private_key.json'
+    gcpServiceAccountKeyFilePath: './gcp_private_key.json',
+    particleAccountLoginFilePath: './particle_login.json'
 };
 /* END CONFIGURATION */
 
@@ -145,6 +147,18 @@ async function storeEvent(inObj) {
 /* END FIRESTORE */
 
 
-/* HELPERS */
-
-/* END HELPERS*/
+/* PARTICLE */
+console.log ("Authenticating with Particle Cloud...")
+let particleLogin = require(config.particleAccountLoginFilePath);
+let particle = new Particle();
+let token;
+particle.login({username: particleLogin.username, password: particleLogin.password}).then(
+    function(data) {
+      token = data.body.access_token;
+    },
+    function (err) {
+      console.log('Could not log in.', err);
+    }
+  );
+console.log("Authentication successful!");
+/* END PARTICLE*/
