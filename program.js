@@ -68,17 +68,15 @@ async function storeEvent(inObj) {
         };
         switch (inObj.data) {
             case "online":
-                outObj["online"] = true;
                 checkUpdate(inObj.device_id);
                 break;
             case "offline":
-                outObj["online"] = false;
                 break;
             default:
                 outObj["data"] = inObj.data;
+                storedData.set(outObj, { merge: true });
                 break;
         }
-        storedData.set(outObj, { merge: true });
     }
 
     // Process incoming data from "sensor-readings" event
