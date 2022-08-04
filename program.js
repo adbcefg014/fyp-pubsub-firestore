@@ -148,19 +148,34 @@ particle.login({username: particleLogin.username, password: particleLogin.passwo
   );
 console.log("Authentication successful!");
 
-/* For collection "pending-interval-updates"
+/* 
+*   For Firestore collection "updates"
 *   Document name -> device_id the update is pending for
-*   Each document should only contain 1 field, named "input" with string value of [newSensingInterval, newIntervalCompensation]
+*   Each document should only contain 1 or 2 fields:
+*       a : newSensingInterval      // this is compulsary
+*       b : newIntervalCompensation
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
-const query = db.collection("pending-interval-updates");
+const query = db.collection("updates");
 const observer = query.onSnapshot(querySnapshot => {
     querySnapshot.docChanges().forEach(change => {
         if (change.type === 'added' || change.type === 'modified') {
+            let updateArray = [];
             pendingUpdatesBool = true;
-            ({input} = change.doc.data());
-            pendingUpdates[change.doc.id] = input;
+
+            ({a, b} = change.doc.data());
+            if (!Number.isInteger(a)) { 
+                console.log("invalid update received");
+                query.doc(change.doc.id).delete();
+                return;
+            }
+            updateArray[0] = a;
+            updateArray[1] = 0;
+            if (b && Number.isInteger(b)) updateArray[1] = b;
+
+            let updateArrayString = "[" + updateArray.toString() + "]";
+            pendingUpdates[change.doc.id] = updateArrayString;
             console.log('Updated pending updates: ', pendingUpdates);
             console.log('Pending updates', pendingUpdatesBool);
         }
