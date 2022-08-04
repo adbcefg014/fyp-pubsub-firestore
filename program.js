@@ -42,7 +42,7 @@ function listenForMessages() {
         message.ack();
     };
 
-    // Listen for new messages until timeout is hit
+    // Listen for new messages
     subscription.on('message', messageHandler);
 }
 
