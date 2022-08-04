@@ -76,7 +76,6 @@ async function storeEvent(inObj) {
                 break;
             default:
                 outObj["data"] = inObj.data;
-                checkUpdate(inObj.device_id);
                 break;
         }
         storedData.set(outObj, { merge: true });
@@ -153,10 +152,10 @@ async function storeEvent(inObj) {
 console.log ("Authenticating with Particle Cloud...")
 let particleLogin = require(config.particleAccountLoginFilePath);
 let particle = new Particle();
-let token;
+let particleToken;
 particle.login({username: particleLogin.username, password: particleLogin.password}).then(
     function(data) {
-      token = data.body.access_token;
+      particleToken = data.body.access_token;
     },
     function (err) {
       console.log('Could not log in.', err);
@@ -197,17 +196,17 @@ const observer = query.onSnapshot(querySnapshot => {
 async function checkUpdate(device_id) {
     if (!pendingUpdatesBool) return;
     if (pendingUpdates.hasOwnProperty(device_id)) {
-        
+        updateIntervals(device_id, pendingUpdates[device_id])
         query.doc(device_id).delete();
     }
 }
 
-function updateIntervals(device_id, inString, token) {
+function updateIntervals(device_id) {
     let functionParticle = particle.callFunction({
         deviceId: device_id,
         name: "adjustIntervals",
-        argument: inString,
-        auth: token
+        argument: pendingUpdates[device_id],
+        auth: particleToken
         });
 
     functionParticle.then(
