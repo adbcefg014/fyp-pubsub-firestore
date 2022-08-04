@@ -177,13 +177,13 @@ const observer = query.onSnapshot(querySnapshot => {
             ({input} = change.doc.data());
             pendingUpdates[change.doc.id] = input;
             console.log('Updated pending updates: ', pendingUpdates);
-            console.log(pendingUpdatesBool);
+            console.log('Pending updates', pendingUpdatesBool);
         }
         if (change.type === 'removed') {
             delete pendingUpdates[change.doc.id];
             if (Object.keys(pendingUpdates).length === 0) pendingUpdatesBool = false;
             console.log('Updated pending updates: ',pendingUpdates);
-            console.log(pendingUpdatesBool);
+            console.log('Pending updates', pendingUpdatesBool);
         }
     })
 }, err => {
