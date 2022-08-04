@@ -182,7 +182,6 @@ function checkUpdate(device_id) {
     if (!pendingUpdatesBool) return;
     if (pendingUpdates.hasOwnProperty(device_id)) {
         updateIntervals(device_id)
-        query.doc(device_id).delete();
     }
 }
 
@@ -192,11 +191,12 @@ function updateIntervals(device_id) {
         name: "adjustIntervals",
         argument: pendingUpdates[device_id],
         auth: particleToken
-        });
-
+    });
+    
     functionParticle.then(
         function(data) {
             console.log('Function called succesfully:', data);
+            query.doc(device_id).delete();
         }, function(err) {
             console.log('An error occurred:', err);
         });
