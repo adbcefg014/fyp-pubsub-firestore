@@ -60,23 +60,10 @@ console.log("Authentication successful!");
 
 
 async function storeEvent(inObj) {
-    // Process incoming data from "spark/status" event, aka device online status updates
+    // Check if any interval update for device that came online
     if (inObj.event === "spark/status") {
-        const storedData = await db.collection("device-status").doc(inObj.device_id)
-        let outObj = {
-            Timestamp: inObj.published_at
-        };
-        switch (inObj.data) {
-            case "online":
-                checkUpdate(inObj.device_id);
-                break;
-            case "offline":
-                break;
-            default:
-                outObj["data"] = inObj.data;
-                storedData.set(outObj, { merge: true });
-                break;
-        }
+        if (inObj.data === "online") checkUpdate(inObj.device_id);
+        return;
     }
 
     // Process incoming data from "sensor-readings" event
