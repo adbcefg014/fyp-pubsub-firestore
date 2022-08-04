@@ -36,7 +36,7 @@ function listenForMessages() {
         console.log(inObj);
         console.log("");
     
-        storeEvent(message, inObj);
+        storeEvent(inObj);
         message.ack();
     };
 
@@ -57,14 +57,14 @@ const db = getFirestore();
 console.log("Authentication successful!");
 
 
-async function storeEvent(message, inObj) {
+async function storeEvent(inObj) {
     // Process incoming data from "spark/status" event, aka device online status updates
-    if (message.attributes.event === "spark/status") {
-        const storedData = await db.collection("device-status").doc(message.attributes.device_id)
+    if (inObj.event === "spark/status") {
+        const storedData = await db.collection("device-status").doc(inObj.device_id)
         let outObj = {
-            Timestamp: message.attributes.published_at
+            Timestamp: inObj.published_at
         };
-        switch (String(message.data)) {
+        switch (inObj.data) {
             case "online":
                 outObj["online"] = true;
                 break;
@@ -72,7 +72,7 @@ async function storeEvent(message, inObj) {
                 outObj["online"] = false;
                 break;
             default:
-                outObj["data"] = String(message.data);
+                outObj["data"] = inObj.data;
                 break;
         }
         storedData.set(outObj, { merge: true });
@@ -81,10 +81,10 @@ async function storeEvent(message, inObj) {
     // Process incoming data from "sensor-readings" event
     let dataArrayGroupSet;
     try {
-        dataArrayGroupSet = JSON.parse(String(message.data));
+        dataArrayGroupSet = JSON.parse(inObj.data);
     } catch (err) {
         // Incoming data is not in format of the sensors' data, thus enter into Firestore as-is
-        const storedData = await db.collection(message.attributes.device_id).add(inObj);
+        const storedData = await db.collection(inObj.device_id).add(inObj);
         console.log("Particle event stored in Firestore!\r\n")
         return;
     }
@@ -137,7 +137,7 @@ async function storeEvent(message, inObj) {
         }
 
         // Add processed set of sensor readings to Database
-        const storedData = await db.collection(message.attributes.device_id).add(dataObj);
+        const storedData = await db.collection(inObj.device_id).add(dataObj);
         console.log("Sensor reading set stored in Firestore\r\n");
         console.log(dataObj);
     }
