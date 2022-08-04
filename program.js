@@ -47,6 +47,7 @@ function listenForMessages() {
 listenForMessages();
 /* END PUBSUB */
 
+
 /* FIRESTORE */
 console.log('Authenticating Firestore with Google Cloud...');
 initializeApp({
@@ -56,12 +57,29 @@ const db = getFirestore();
 console.log("Authentication successful!");
 
 
-
-
 async function storeEvent(message, inObj) {
-    let dataArrayGroupSet;
+    // Process incoming data from "spark/status" event, aka device online status updates
+    if (message.attributes.event === "spark/status") {
+        const storedData = await db.collection("device-status").doc(message.attributes.device_id)
+        let outObj = {
+            Timestamp: message.attributes.published_at
+        };
+        switch (String(message.data)) {
+            case "online":
+                outObj["online"] = true;
+                break;
+            case "offline":
+                outObj["online"] = false;
+                break;
+            default:
+                outObj["data"] = String(message.data);
+                break;
+        }
+        storedData.set(outObj, { merge: true });
+    }
 
-    // Process incoming data
+    // Process incoming data from "sensor-readings" event
+    let dataArrayGroupSet;
     try {
         dataArrayGroupSet = JSON.parse(String(message.data));
     } catch (err) {
@@ -125,3 +143,8 @@ async function storeEvent(message, inObj) {
     }
 };
 /* END FIRESTORE */
+
+
+/* HELPERS */
+
+/* END HELPERS*/
