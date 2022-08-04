@@ -69,12 +69,14 @@ async function storeEvent(inObj) {
         switch (inObj.data) {
             case "online":
                 outObj["online"] = true;
+                checkUpdate(inObj.device_id);
                 break;
             case "offline":
                 outObj["online"] = false;
                 break;
             default:
                 outObj["data"] = inObj.data;
+                checkUpdate(inObj.device_id);
                 break;
         }
         storedData.set(outObj, { merge: true });
@@ -161,4 +163,58 @@ particle.login({username: particleLogin.username, password: particleLogin.passwo
     }
   );
 console.log("Authentication successful!");
+
+/* For collection "pending-interval-updates"
+*   Document name -> device_id the update is pending for
+*   Each document should only contain 1 field, named "input" with string value of [newSensingInterval, newIntervalCompensation]
+*/  
+let pendingUpdatesBool = false;
+let pendingUpdates = {};
+const query = db.collection("pending-interval-updates");
+const observer = query.onSnapshot(querySnapshot => {
+    querySnapshot.docChanges().forEach(change => {
+        if (change.type === 'added' || change.type === 'modified') {
+            pendingUpdatesBool = true;
+            ({input} = change.doc.data());
+            pendingUpdates[change.doc.id] = input;
+            console.log('Updated pending updates: ', pendingUpdates);
+            console.log(pendingUpdatesBool);
+        }
+        if (change.type === 'removed') {
+            delete pendingUpdates[change.doc.id];
+            if (Object.keys(pendingUpdates).length === 0) pendingUpdatesBool = false;
+            console.log('Updated pending updates: ',pendingUpdates);
+            console.log(pendingUpdatesBool);
+        }
+    })
+}, err => {
+    console.log(`Encountered error: ${err}`);
+});
 /* END PARTICLE*/
+
+
+/* HELPERS*/
+async function checkUpdate(device_id) {
+    if (!pendingUpdatesBool) return;
+    if (pendingUpdates.hasOwnProperty(device_id)) {
+        
+        query.doc(device_id).delete();
+    }
+}
+
+function updateIntervals(device_id, inString, token) {
+    let functionParticle = particle.callFunction({
+        deviceId: device_id,
+        name: "adjustIntervals",
+        argument: inString,
+        auth: token
+        });
+
+    functionParticle.then(
+        function(data) {
+            console.log('Function called succesfully:', data);
+        }, function(err) {
+            console.log('An error occurred:', err);
+        });
+}
+/* END HELPERS*/
