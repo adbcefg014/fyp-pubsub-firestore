@@ -162,8 +162,6 @@ const observer = query.onSnapshot(querySnapshot => {
     querySnapshot.docChanges().forEach(change => {
         if (change.type === 'added' || change.type === 'modified') {
             let updateArray = [];
-            pendingUpdatesBool = true;
-
             ({a, b} = change.doc.data());
             if (!Number.isInteger(a)) { 
                 console.log("invalid update received");
@@ -173,8 +171,9 @@ const observer = query.onSnapshot(querySnapshot => {
             updateArray[0] = a;
             updateArray[1] = 0;
             if (b && Number.isInteger(b)) updateArray[1] = b;
-
             let updateArrayString = "[" + updateArray.toString() + "]";
+            
+            pendingUpdatesBool = true;
             pendingUpdates[change.doc.id] = updateArrayString;
             console.log('Updated pending updates: ', pendingUpdates);
             console.log('Pending updates', pendingUpdatesBool);
