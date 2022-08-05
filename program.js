@@ -195,7 +195,7 @@ const observer = query.onSnapshot(querySnapshot => {
 function checkUpdate(device_id) {
     if (!pendingUpdatesBool) return;
     if (pendingUpdates.hasOwnProperty(device_id)) {
-        updateIntervals(device_id)
+        updateIntervals(device_id);
     }
 }
 
