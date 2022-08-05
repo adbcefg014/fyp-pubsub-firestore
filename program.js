@@ -152,24 +152,27 @@ console.log("Authentication successful!");
 *   For Firestore collection "updates"
 *   Document name -> device_id the update is pending for
 *   Each document should only contain 1 or 2 fields:
-*       a : newSensingInterval      // this is compulsary
-*       b : newIntervalCompensation
+*       a : newSensingInterval          // minimum 120000 (ms), compulsory
+*       b : newIntervalCompensation     // minimum 0, optional
+*       c : readingsToCollate           // minimum 1, compulsory
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
-const query = db.collection("updates");
-const observer = query.onSnapshot(querySnapshot => {
+const updateCollection = db.collection("updates");
+const updatedIntervals = db.collection("updated-intervals")
+const observer = updateCollection.onSnapshot(querySnapshot => {
     querySnapshot.docChanges().forEach(change => {
         if (change.type === 'added' || change.type === 'modified') {
             let updateArray = [];
-            ({a, b} = change.doc.data());
-            if (!Number.isInteger(a)) { 
+            ({a, b, c} = change.doc.data());
+            if (!Number.isInteger(a) || !Number.isInteger(c) || a < 120000 || b < 0 || c < 1) { 
                 console.log("invalid update received");
-                query.doc(change.doc.id).delete();
+                updateCollection.doc(change.doc.id).delete();
                 return;
             }
             updateArray[0] = a;
             updateArray[1] = 0;
+            updateArray[2] = c;
             if (b && Number.isInteger(b)) updateArray[1] = b;
             let updateArrayString = "[" + updateArray.toString() + "]";
             
@@ -177,6 +180,13 @@ const observer = query.onSnapshot(querySnapshot => {
             pendingUpdates[change.doc.id] = updateArrayString;
             console.log('Updated pending updates: ', pendingUpdates);
             console.log('Pending updates', pendingUpdatesBool);
+
+            // Record new intervals to Firestore
+            updatedIntervals.doc(change.doc.id).set({
+                a: updateArray[0],
+                b: updateArray[1],
+                c: updateArray[2]
+            });
         }
         if (change.type === 'removed') {
             delete pendingUpdates[change.doc.id];
@@ -210,7 +220,7 @@ function updateIntervals(device_id) {
     functionParticle.then(
         function(data) {
             console.log('Function called succesfully:', data);
-            query.doc(device_id).delete();
+            updateCollection.doc(device_id).delete();
         }, function(err) {
             console.log('An error occurred:', err);
         });
