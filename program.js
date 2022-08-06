@@ -195,14 +195,14 @@ const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
 
 
 /* HELPERS*/
-async function checkUpdate(device_id) {
+function checkUpdate(device_id) {
     if (!pendingUpdatesBool) return;
     if (pendingUpdates.hasOwnProperty(device_id)) {
         updateIntervals(device_id);
     }
 }
 
-function updateIntervals(device_id) {
+async function updateIntervals(device_id) {
     let updateArrayString = "[" + pendingUpdates[device_id].toString() + "]";
 
     let functionParticle = particle.callFunction({
