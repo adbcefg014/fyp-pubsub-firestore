@@ -158,16 +158,16 @@ console.log("Authentication successful!");
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
-const updateCollection = db.collection("updates");
-const updatedIntervals = db.collection("updated-intervals")
-const observer = updateCollection.onSnapshot(querySnapshot => {
+const pendingUpdatesFirestore = db.collection("updates");
+const updatedIntervalsFirestore = db.collection("updated-intervals")
+const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
     querySnapshot.docChanges().forEach(change => {
         if (change.type === 'added' || change.type === 'modified') {
             let updateArray = [];
             ({a, b, c} = change.doc.data());
             if (!Number.isInteger(a) || a < 120000 || b < 0 || c < 1) { 
                 console.log("invalid update received");
-                updateCollection.doc(change.doc.id).delete();
+                pendingUpdatesFirestore.doc(change.doc.id).delete();
                 return;
             }
             updateArray[0] = a;
@@ -217,12 +217,12 @@ function updateIntervals(device_id) {
             console.log('Function called succesfully:', data);
 
             // Record new intervals to Firestore
-            updatedIntervals.doc(change.doc.id).set({
+            updatedIntervalsFirestore.doc(change.doc.id).set({
                 a: pendingUpdates[device_id][0],
                 b: pendingUpdates[device_id][1],
                 c: pendingUpdates[device_id][2]
             });
-            updateCollection.doc(device_id).delete();
+            pendingUpdatesFirestore.doc(device_id).delete();
         }, function(err) {
             console.log('An error occurred:', err);
         });
