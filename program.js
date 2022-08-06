@@ -195,7 +195,7 @@ const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
 
 
 /* HELPERS*/
-function checkUpdate(device_id) {
+async function checkUpdate(device_id) {
     if (!pendingUpdatesBool) return;
     if (pendingUpdates.hasOwnProperty(device_id)) {
         updateIntervals(device_id);
