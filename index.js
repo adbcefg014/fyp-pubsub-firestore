@@ -83,7 +83,7 @@ async function processIncomingEvent(inObj) {
         let dataObj = {};
         let reading;
         for (let dataReading = 0; dataReading < dataArrayGroupSet[dataArraySet].length; dataReading++) {
-            // Store according to the data schema in db.collection('schema').doc('schema')
+            // Store according to the data schema in db.collection('schema').doc('sensor-readings')
             dataObj[dataReading] = dataArrayGroupSet[dataArraySet][dataReading];
         }
 
@@ -118,6 +118,7 @@ console.log("Authentication successful!");
 *       a : newSensingInterval          // default/minimum 120000 (ms), compulsory
 *       b : newIntervalCompensation     // default/minimum 0, optional
 *       c : readingsToCollate           // default/minimum 1, optional
+*   Store according to the data schema above, repeated in db.collection('schema').doc('sensor-readings')
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
