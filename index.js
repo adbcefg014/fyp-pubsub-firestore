@@ -83,20 +83,7 @@ async function processIncomingEvent(inObj) {
         let dataObj = {};
         let reading;
         for (let dataReading = 0; dataReading < dataArrayGroupSet[dataArraySet].length; dataReading++) {
-            /*
-            0:  Timestamp
-            1:  Light level (lux)
-            2:  Loudness (dB)
-            3:  UV light level
-            4:  Pressure (mBar)
-            5:  Temperature (*C)
-            6:  Relative Humidity (%)
-            7:  PM1.0 (μg/m3)
-            8:  PM2.5 (μg/m3)
-            9:  PM4.0 (μg/m3)
-            10: PM10.0 (μg/m3)
-            11: CO2 (ppm)
-            */
+            // Store according to the data schema in db.collection('schema').doc('schema')
             dataObj[dataReading] = dataArrayGroupSet[dataArraySet][dataReading];
         }
 
