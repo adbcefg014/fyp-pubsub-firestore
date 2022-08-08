@@ -85,40 +85,40 @@ async function processIncomingEvent(inObj) {
         for (let dataReading = 0; dataReading < dataArrayGroupSet[dataArraySet].length; dataReading++) {
             switch (dataReading) {
                 case 0:
-                    reading = 'Timestamp';
+                    reading = 'ts';
                     break;
                 case 1:
-                    reading = 'Light level (lux)';
+                    reading = 'lux';
                     break;
                 case 2:
-                    reading = 'Loudness (dB)';
+                    reading = 'dB';
                     break;
                 case 3:
-                    reading = 'UV light level';
+                    reading = 'UV';
                     break;
                 case 4:
-                    reading = 'Pressure (mBar)';
+                    reading = 'mBar';
                     break;
                 case 5:
-                    reading = 'Temperature (*C)';
+                    reading = '*C';
                     break;
                 case 6:
-                    reading = 'Relative Humidity (%)';
+                    reading = 'RH';
                     break;
                 case 7:
-                    reading = 'PM1.0 (μg/m3)';
+                    reading = 'PM1';
                     break;
                 case 8:
-                    reading = 'PM2.5 (μg/m3)';
+                    reading = 'PM2.5';
                     break; 
                 case 9:
-                    reading = 'PM4.0 (μg/m3)';
+                    reading = 'PM4';
                     break;
                 case 10:
-                    reading = 'PM10.0 (μg/m3)';
+                    reading = 'PM10';
                     break;
                     case 11:
-                        reading = 'CO2 (ppm)';
+                        reading = 'CO2';
                         break;
             }
             dataObj[reading] = dataArrayGroupSet[dataArraySet][dataReading];
