@@ -118,7 +118,7 @@ console.log("Authentication successful!");
 *       a : newSensingInterval          // default/minimum 120000 (ms), compulsory
 *       b : newIntervalCompensation     // default/minimum 0, optional
 *       c : readingsToCollate           // default/minimum 1, optional
-*   Store according to the data schema above, repeated in db.collection('schema').doc('sensor-readings')
+*   Store according to the data schema above, repeated in db.collection('schema').doc('adjust-intervals')
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
