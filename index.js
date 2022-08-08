@@ -38,7 +38,7 @@ function listenForMessages() {
         console.log(inObj);
         console.log("");
     
-        storeEvent(inObj);
+        processIncomingEvent(inObj);
         message.ack();
     };
 
@@ -59,7 +59,7 @@ const db = getFirestore();
 console.log("Authentication successful!");
 
 
-async function storeEvent(inObj) {
+async function processIncomingEvent(inObj) {
     // Check if any interval update for device that came online
     if (inObj.event === "spark/status") {
         if (inObj.data === "online") checkUpdate(inObj.device_id);
@@ -202,7 +202,7 @@ function checkUpdate(device_id) {
     }
 }
 
-async function updateIntervals(device_id) {
+function updateIntervals(device_id) {
     let updateArrayString = "[" + pendingUpdates[device_id].toString() + "]";
 
     let functionParticle = particle.callFunction({
