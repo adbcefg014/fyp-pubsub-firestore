@@ -160,9 +160,9 @@ const pendingUpdatesObserver = pendingUpdatesFirestore.onSnapshot(pendingUpdates
 
 // Retrieving & saving Particle devices information
 const deviceInfoFirestore = db.collection("deviceInfo");
-const updateDeviceInfoObserver = deviceInfoFirestore.doc('deviceInfo');
+const updateDeviceInfoObserver = deviceInfoFirestore.doc('update');
 updateDeviceInfoObserver.onSnapshot(docSnapshot => {
-    if (docSnapshot.get('getUpdate') === true) retrieveParticleDevices();
+    if (docSnapshot.get('refresh') === true) retrieveParticleDevices();
     })
 
 function retrieveParticleDevices(){
@@ -173,7 +173,7 @@ function retrieveParticleDevices(){
             devicesInfoArray.forEach(deviceInfo => {
                 deviceInfoFirestore.doc(deviceInfo['id']).set(deviceInfo);
             })
-            deviceInfoFirestore.doc('deviceInfo').update({getUpdate: false});
+            deviceInfoFirestore.doc('update').update({refresh: false});
             console.log("Retrieved devices info from Particle Cloud");
         },
         function(err) {
