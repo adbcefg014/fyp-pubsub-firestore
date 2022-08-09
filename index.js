@@ -72,7 +72,7 @@ async function processIncomingEvent(inObj) {
         dataArrayGroupSet = JSON.parse(inObj.data);
     } catch (err) {
         // Incoming data is not in format of the sensors' data, thus enter into Firestore as-is
-        const storedData = await db.collection(inObj.device_id).add(inObj);
+        db.collection(inObj.device_id).add(inObj);
         console.log("Particle event stored in Firestore!\r\n")
         return;
     }
@@ -88,7 +88,7 @@ async function processIncomingEvent(inObj) {
         }
 
         // Add processed set of sensor readings to Database
-        const storedData = await db.collection(inObj.device_id).add(dataObj);
+        db.collection(inObj.device_id).add(dataObj);
         console.log("Sensor reading set stored in Firestore\r\n");
         console.log(dataObj);
     }
@@ -104,6 +104,7 @@ let particleToken;
 particle.login({username: particleLogin.username, password: particleLogin.password}).then(
     function(data) {
       particleToken = data.body.access_token;
+      retrieveParticleDevices();
     },
     function (err) {
       console.log('Could not log in.', err);
@@ -112,8 +113,8 @@ particle.login({username: particleLogin.username, password: particleLogin.passwo
 console.log("Authentication successful!");
 
 /* 
-*   For Firestore collection "updates"
-*   Document name -> device_id the update is pending for
+*   For updating sevice sensor reading interval settings
+*   Firestore collection document name -> device_id the update is pending for
 *   Each document should only contain 1 or 2 fields:
 *       a : newSensingInterval          // default/minimum 120000 (ms), compulsory
 *       b : newIntervalCompensation     // default/minimum 0, optional
@@ -122,16 +123,16 @@ console.log("Authentication successful!");
 */  
 let pendingUpdatesBool = false;
 let pendingUpdates = {};
-const pendingUpdatesFirestore = db.collection("updates");
-const updatedIntervalsFirestore = db.collection("updated-intervals")
-const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
-    querySnapshot.docChanges().forEach(change => {
-        if (change.type === 'added' || change.type === 'modified') {
+const pendingUpdatesFirestore = db.collection("pendingUpdates");
+const updatesFirestore = db.collection("updates")
+const pendingUpdatesObserver = pendingUpdatesFirestore.onSnapshot(pendingUpdatesQuerySnapshot => {
+    pendingUpdatesQuerySnapshot.docChanges().forEach(pendingUpdatesChange => {
+        if (pendingUpdatesChange.type === 'added' || pendingUpdatesChange.type === 'modified') {
             let updateArray = [];
-            ({a, b, c} = change.doc.data());
+            ({a, b, c} = pendingUpdatesChange.doc.data());
             if (!Number.isInteger(a) || a < 120000 || b < 0 || c < 1) { 
                 console.log("invalid update received");
-                pendingUpdatesFirestore.doc(change.doc.id).delete();
+                pendingUpdatesFirestore.doc(pendingUpdatesChange.doc.id).delete();
                 return;
             }
             updateArray[0] = a;
@@ -141,12 +142,12 @@ const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
             if (c && Number.isInteger(c)) updateArray[2] = c;
             
             pendingUpdatesBool = true;
-            pendingUpdates[change.doc.id] = updateArray;
+            pendingUpdates[pendingUpdatesChange.doc.id] = updateArray;
             console.log('Updated pending updates: ', pendingUpdates);
             console.log('Pending updates', pendingUpdatesBool);
         }
-        if (change.type === 'removed') {
-            delete pendingUpdates[change.doc.id];
+        if (pendingUpdatesChange.type === 'removed') {
+            delete pendingUpdates[pendingUpdatesChange.doc.id];
             if (Object.keys(pendingUpdates).length === 0) pendingUpdatesBool = false;
             console.log('Updated pending updates: ',pendingUpdates);
             console.log('Pending updates', pendingUpdatesBool);
@@ -155,6 +156,31 @@ const observer = pendingUpdatesFirestore.onSnapshot(querySnapshot => {
 }, err => {
     console.log(`Encountered error: ${err}`);
 });
+
+
+// Retrieving & saving Particle devices information
+const deviceInfoFirestore = db.collection("deviceInfo");
+const updateDeviceInfoObserver = deviceInfoFirestore.doc('deviceInfo');
+updateDeviceInfoObserver.onSnapshot(docSnapshot => {
+    if (docSnapshot.get('getUpdate') === true) retrieveParticleDevices();
+    })
+
+function retrieveParticleDevices(){
+    let particleDevices = particle.listDevices({auth: particleToken});
+    particleDevices.then(
+        function(devices){
+            let devicesInfoArray = devices['body'];
+            devicesInfoArray.forEach(deviceInfo => {
+                deviceInfoFirestore.doc(deviceInfo['id']).set(deviceInfo);
+            })
+            deviceInfoFirestore.doc('deviceInfo').update({getUpdate: false});
+            console.log("Retrieved devices info from Particle Cloud");
+        },
+        function(err) {
+            console.log('List devices call failed: ', err);
+        }
+      );
+}
 /* END PARTICLE*/
 
 
@@ -181,7 +207,7 @@ function updateIntervals(device_id) {
             console.log('Function called succesfully:', data);
 
             // Record new intervals to Firestore
-            updatedIntervalsFirestore.doc(change.doc.id).set({
+            updatesFirestore.doc(device_id).set({
                 a: pendingUpdates[device_id][0],
                 b: pendingUpdates[device_id][1],
                 c: pendingUpdates[device_id][2]
@@ -191,4 +217,7 @@ function updateIntervals(device_id) {
             console.log('An error occurred:', err);
         });
 }
+
+
+
 /* END HELPERS*/
